@@ -1,10 +1,7 @@
 import math
 import dists
+import copy
 
-next_city = ''
-
-closed = {}
-visited = {}
 
 
 # goal sempre sera 'bucharest'
@@ -14,60 +11,87 @@ def a_star(start, goal = "Bucharest"):
     Bucharest segundo o algoritmo A*
     """ 
     
+    if start not in dists.dists or goal not in dists.dists:
+        print ("START OR GOAL IS INVALID!")
+        return;
+        
+    out = {}
+    visited = {}
     visited[start] = { "path" : [], "cost" : 0}
-    expandNode(start, goal)   
     
+    
+    if expandNode(start, goal, out, visited, debug = True) is not None:
+        print ("DESTINATION FOUND: ")
+        print ("{0:>15} {1}".format(goal,visited[goal]))
+    else:
+        print ("MAX DEEP ITERATIONS REACHED")
 
     
-def expandNode(current_city, goal, it = 0):    
+def expandNode(current_city, goal, out = {}, visited = {}, debug = False, it = 0):    
     if current_city == goal:
-        print ("DESTINATION FOUND")
-        return visited[current_city];
+        return visited[goal]
     
     if(it > 50):
-        return visited[current_city];
-    
+        return None;    
     
     #if current_city in visited
-    closed[current_city] = visited[current_city]
-        
+    out[current_city] = visited[current_city]        
     
     for city,cost in dists.dists[current_city]:        
-        if city in closed:
+        if city in out:
             continue
                                 
-        if city not in visited:
-            
+        if city not in visited:            
             visited[city] = {
-                "path" : (closed[current_city]["path"].copy()),
-                "cost" : (closed[current_city]["cost"] + cost) }
+                "path" : (out[current_city]["path"].copy()),
+                "cost" : (out[current_city]["cost"] + cost) }
             
-            visited[city]["path"].append(current_city)               
-    
+            visited[city]["path"].append(current_city)     
         
-    visited.pop(current_city)
-        
-    best_node = min(visited.items(), key=lambda x: x[1]["cost"])    
-    next_city = best_node[0]
-    cost = best_node[1]["cost"]
+    visited.pop(current_city)    
+   
+    next_city = look_for_next_city(visited, goal)
     
     
     it += 1;    
     
-    print ("EXPANDING: {0}\nSUBNODES: {1}\n".format(current_city, dists.dists[current_city]))   
-    
-    print ("\n == CLOSED ==:")
-    printDict (closed)
-        
-    print ("\n == VISITED ==:")
-    printDict (visited)
-    
-    print ("NEXT: {0} WITH COST: {1}\n\n============\n".format(next_city,cost))
+    if debug:
+        debugPrint(current_city,out,visited,next_city)
 
-    expandNode(next_city,goal, it)
+    return expandNode(next_city[0],goal,out, visited,debug,it)
+
+
+def look_for_next_city(visited = {}, goal = ""):
+    candidates = copy.deepcopy(visited)
+    
+    """
+    for candidate in candidates.items():        
+        if goal in dists.straightline_dists:    
+            candidate[1]["cost"] += dists.straightline_dists[goal][candidate[0]]
+            continue
+        
+        if candidate.key in dists.straightline_dists:
+            candidate["cost"] += dists.straightline_dists[candidate[0]][goal]
+            continue                
+    """
+    
+    best_node = min(candidates.items(), key=lambda x: x[1]["cost"])
+        
+    print(">>>>>{0}".format(best_node))
+    
+    return best_node
+
+def debugPrint(current_city,out,visited, next_city):    
+        print ("EXPANDING: {0}\nSUBNODES: {1}".format(current_city, dists.dists[current_city]))          
+        print ("\n{0}{1:-^85}\n".format('\x1b[6;37;41m','OUT:'))
+        printDict (out)            
+        print ("\n{0}{1:-^85}".format('\x1b[6;37;42m','VISITED'))
+        printDict (visited)        
+        print ("\x1b[0m")
+        print ("\nNEXT: {0} WITH COST: {1}\n\n{2:=>85}\n".format(next_city[0],next_city[1]["cost"],''))
     
     
 def printDict(dict = {}):
     for a in dict.items():
-        print("{0} : {1}".format(a[0], a[1]))
+        print("{0: >15} : {1}".format(a[0], a[1]))
         
