@@ -3,56 +3,71 @@ import dists
 
 next_city = ''
 
-visited = []
-closed = []
-destination_costs = {}
+closed = {}
+visited = {}
 
 
 # goal sempre sera 'bucharest'
-def a_star(start):
+def a_star(start, goal = "Bucharest"):
     """
     Retorna uma lista com o caminho de start até 
     Bucharest segundo o algoritmo A*
     """ 
-    destination_costs = {}
+    
+    visited[start] = { "path" : [], "cost" : 0}
+    expandNode(start, goal)   
+    
 
-    expandNode(start)
+    
+def expandNode(current_city, goal, it = 0):    
+    if current_city == goal:
+        print ("DESTINATION FOUND")
+        return visited[current_city];
+    
+    if(it > 50):
+        return visited[current_city];
     
     
-def expandNode(currentCity, path = [], it = 0):
-    
-    if currentCity == "Bucharest":
-        print ("Bucharest Found")
-        return path;
-    
-    if(it > 10):
-        return path
-    
-    
-    path.append(currentCity)    
-    closed.append(currentCity)    
-    print ("Expanding: {0} SubNodes: {1}".format(currentCity, dists.dists[currentCity]))
+    #if current_city in visited
+    closed[current_city] = visited[current_city]
         
-    for city,cost in dists.dists[currentCity]:        
+    
+    for city,cost in dists.dists[current_city]:        
         if city in closed:
             continue
-                
-        if city in destination_costs:
-            destination_costs[city] += cost
-        else:
-            destination_costs[city] = cost
+                                
+        if city not in visited:
+            
+            visited[city] = {
+                "path" : (closed[current_city]["path"].copy()),
+                "cost" : (closed[current_city]["cost"] + cost) }
+            
+            visited[city]["path"].append(current_city)               
     
-    print ("closed: {0}".format(closed))
-    print ("cost: {0}".format(destination_costs))
+        
+    visited.pop(current_city)
+        
+    best_node = min(visited.items(), key=lambda x: x[1]["cost"])    
+    next_city = best_node[0]
+    cost = best_node[1]["cost"]
     
-    next_city = min(destination_costs.items(), key=lambda x: x[1])[0]
-    cost = min(destination_costs.items(), key=lambda x: x[1])[1]
-    destination_costs.pop(next_city)
     
-    it += 1;
+    it += 1;    
     
-    print ("Next City: {0} cost: {1}\n\n".format(next_city,cost))
+    print ("EXPANDING: {0}\nSUBNODES: {1}\n".format(current_city, dists.dists[current_city]))   
+    
+    print ("\n == CLOSED ==:")
+    printDict (closed)
+        
+    print ("\n == VISITED ==:")
+    printDict (visited)
+    
+    print ("NEXT: {0} WITH COST: {1}\n\n============\n".format(next_city,cost))
 
-    expandNode(currentCity = next_city, it = it)
+    expandNode(next_city,goal, it)
     
+    
+def printDict(dict = {}):
+    for a in dict.items():
+        print("{0} : {1}".format(a[0], a[1]))
         
